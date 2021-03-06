@@ -8,6 +8,7 @@
             "email": "martinkz@users.noreply.github.com"
         }
     ],
+    "minimum-stability": "stable",
     "require": {
         "prismic/php-sdk": "^5.1"
     },
