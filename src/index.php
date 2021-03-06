@@ -7,7 +7,7 @@ namespace martinkzh\PrismicCacheTool
 
 class SetUpCache
 {
-    private static function init()
+    public static function init()
     {
     	echo "test";
     }
