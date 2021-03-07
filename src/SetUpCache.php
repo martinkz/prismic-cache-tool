@@ -1,11 +1,11 @@
 <?php
 
-namespace martinkzh\PrismicCacheTool;
+namespace martinkz\PrismicCacheTool;
 
 class SetUpCache
 {
     public static function init()
     {
-    	echo "test";
+    	return "test2";
     }
 }

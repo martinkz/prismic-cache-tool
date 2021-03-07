@@ -1,8 +1,7 @@
 {
-    "name": "martinkzh/prismic-cache-tool",
+    "name": "martinkz/prismic-cache-tool",
     "description": "Caches your Prismic documents locally in json files. Needs to be triggered by a Prismic webhook.",
     "type": "library",
-    "license": "MIT",
     "authors": [
         {
             "name": "Martin K.",
@@ -10,8 +9,10 @@
         }
     ],
     "minimum-stability": "stable",
-    "autoload": {
-        "psr-4": {"martinkzh\\PrismicCacheTool\\": "src/"}
+    "require": {
+        "prismic/php-sdk": "^5.1"
     },
-    "require": {}
+    "autoload": {
+        "psr-4": {"martinkz\\PrismicCacheTool\\": "src/"}
+    }
 }
