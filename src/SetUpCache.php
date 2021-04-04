@@ -5,18 +5,98 @@ namespace martinkz\PrismicCacheTool;
 require_once 'vendor/autoload.php';
 
 use Prismic\Api;
-use Prismic\LinkResolver;
 use Prismic\Predicates;
+
+require_once 'ProcessPrismicDocument.php';
 
 
 class SetUpCache
 {
-    public static function init()
-    {
-    	$url = "https://asdfgh.cdn.prismic.io/api/v2";
-		// $url = "https://mynewsite.cdn.prismic.io/api/v2";
-		$api = Api::get($url);
-		$response = $api->query('');
-    	return json_encode($response);
-    }
+	private static $DEFAULT_PATH = [
+		"DOCUMENT_CACHE" => "docs-cache/",
+		"IMAGE_CACHE" => "image-cache/",
+		// "PREVIEW_CACHE" => "preview-cache/"
+	];
+
+	public static function init($CACHE_PATH = NULL)
+	{
+		if (is_null($CACHE_PATH)) {
+			$CACHE_PATH = self::$DEFAULT_PATH;
+		}
+
+		$data = json_decode(file_get_contents('php://input'));
+		$data = json_decode(file_get_contents('webhook-data.json'));
+		//$data = false;
+
+		if ($data) {
+			// If masterRef is set, this is a document publish (either regular publish or publish of a scheduled release), or archival of published document
+			$hasMasterRef = isset($data->{"masterRef"});
+			$hasUpdate = isset($data->{"releases"}->{"update"});
+			$hasDeletion = isset($data->{"releases"}->{"deletion"});
+			// The below is true if a planned release is being published (and the scheduled document is deleted)
+			$isPlannedReleasePublish = $hasMasterRef && $hasDeletion;
+			// The below is true if a planned release was saved and scheduled for future publishing
+			$isPlannedReleaseSave = !$hasMasterRef && $hasUpdate;
+			// The below is true if a planned release was deleted (before it reached the publishing date), 
+			// or the release is being deleted after the documents have been published (there appears to be a delay sometimes?)
+			$isPlannedReleaseDelete = !$hasMasterRef && !$hasUpdate && $hasDeletion;
+
+			$releaseRef = NULL;
+			$documentIDs = NULL;
+
+			if ($hasMasterRef) {
+				$releaseRef = $data->{"masterRef"};
+				$documentIDs = $data->{"documents"};
+			} elseif ($hasUpdate) {
+				$releaseInfo = $data->{"releases"}->{"update"}[0];
+				if (!empty($releaseInfo->documents)) {
+					$releaseRef = $releaseInfo->ref;
+					$documentIDs = $releaseInfo->documents;
+				}
+			}
+
+			if (is_null($releaseRef) || is_null($documentIDs)) exit();
+
+			$api = Api::get($data->{"apiUrl"});
+			$response = $api->query(Predicates::in('document.id', $documentIDs), ['ref' => $releaseRef]);
+			$documents = $response->results;
+			$domain = $data->{"domain"};
+
+			//if( isset($releaseInfo) ) echo "scheduledAt: ". date('Y-m-d H:i:s', substr($releaseInfo->scheduledAt, 0, -3)) . "\n\n";
+			//print_r(json_encode($documents));
+
+			foreach ($documents as $document) {
+				$stringAppend = "";
+				if ($isPlannedReleaseSave) {
+					//$dateTime = date("Y-m-d H:i:s", substr($releaseInfo->scheduledAt, 0, -3));
+					$stringAppend = '-' . $releaseInfo->ref;
+				}
+				// logDebug($document->id . " --- " . $document->uid . $stringAppend);
+				//$filename = PRISMIC_CACHE_PATH['DOCUMENT_CACHE'] . $document->type . '/' . $document->uid . $stringAppend . '.json';
+				$documentProcessor = new ProcessPrismicDocument($document, $CACHE_PATH, $domain);
+				// richText() needs to run before images(). This is because there may be inlined images in the WYSIWYG editor.
+				$document = $documentProcessor->richText();
+				$document = $documentProcessor->images();
+
+				$path = $CACHE_PATH['DOCUMENT_CACHE'] . $domain . '/' . $document['type'] . '/';
+				$filename = $document['uid'] . $stringAppend . '.json';
+				if (!is_dir($path)) {
+					mkdir($path, 0755, true);
+				}
+				file_put_contents($path . $filename, json_encode($document));
+			}
+		} else {
+			$url = "https://asdfgh.cdn.prismic.io/api/v2";
+			// $url = "https://mynewsite.prismic.io/api";
+			$api = Api::get($url);
+			$response = $api->query('');
+
+			$document = $response->results[0];
+			$documentProcessor = new ProcessPrismicDocument($document, $CACHE_PATH);
+			$document = $documentProcessor->richText();
+			$document = $documentProcessor->images(false);
+
+			print_r($document);
+		}
+	}
 }
