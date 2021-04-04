@@ -13,9 +13,8 @@ require_once 'ProcessPrismicDocument.php';
 class SetUpCache
 {
 	private static $DEFAULT_PATH = [
-		"DOCUMENT_CACHE" => "docs-cache/",
-		"IMAGE_CACHE" => "image-cache/",
-		// "PREVIEW_CACHE" => "preview-cache/"
+		"DOCUMENT_CACHE" => "%REPOSITORY%/docs/%DOCUMENT_TYPE%/",
+		"IMAGE_CACHE" => "%REPOSITORY%/images/%DOCUMENT_TYPE%/",
 	];
 
 	public static function init($CACHE_PATH = NULL)
@@ -26,7 +25,6 @@ class SetUpCache
 
 		$data = json_decode(file_get_contents('php://input'));
 		$data = json_decode(file_get_contents('webhook-data.json'));
-		//$data = false;
 
 		if ($data) {
 			// If masterRef is set, this is a document publish (either regular publish or publish of a scheduled release), or archival of published document
@@ -66,6 +64,11 @@ class SetUpCache
 			//print_r(json_encode($documents));
 
 			foreach ($documents as $document) {
+				$CACHE_PATH['DOCUMENT_CACHE'] = str_replace('%REPOSITORY%', $domain, $CACHE_PATH['DOCUMENT_CACHE']);
+				$CACHE_PATH['DOCUMENT_CACHE'] = str_replace('%DOCUMENT_TYPE%', $document->{'type'}, $CACHE_PATH['DOCUMENT_CACHE']);
+				$CACHE_PATH['IMAGE_CACHE'] = str_replace('%REPOSITORY%', $domain, $CACHE_PATH['IMAGE_CACHE']);
+				$CACHE_PATH['IMAGE_CACHE'] = str_replace('%DOCUMENT_TYPE%', $document->{'type'}, $CACHE_PATH['IMAGE_CACHE']);
+
 				$stringAppend = "";
 				if ($isPlannedReleaseSave) {
 					//$dateTime = date("Y-m-d H:i:s", substr($releaseInfo->scheduledAt, 0, -3));
@@ -78,8 +81,10 @@ class SetUpCache
 				$document = $documentProcessor->richText();
 				$document = $documentProcessor->images();
 
-				$path = $CACHE_PATH['DOCUMENT_CACHE'] . $domain . '/' . $document['type'] . '/';
-				$filename = $document['uid'] . $stringAppend . '.json';
+				unset($document['uid']);
+
+				$path = './' . $CACHE_PATH['DOCUMENT_CACHE'] . '/';
+				$filename = (isset($document['uid']) ? $document['uid'] : $document['type'] . ' - ' . $document['id']) . $stringAppend . '.json';
 				if (!is_dir($path)) {
 					mkdir($path, 0755, true);
 				}

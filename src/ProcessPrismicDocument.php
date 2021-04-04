@@ -72,7 +72,7 @@ class ProcessPrismicDocument
 
             if ($cache) {
                 $fileName = basename(parse_url($imageURL, PHP_URL_PATH));
-                $path = $this->CACHE_PATH['IMAGE_CACHE'] . (!is_null($this->domain) ? $this->domain . '/' : '') . $this->document['type'] . '/';
+                $path = './' . $this->CACHE_PATH['IMAGE_CACHE'] . '/';
                 if (!is_dir($path)) {
                     mkdir($path, 0755, true);
                 }
