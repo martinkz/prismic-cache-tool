@@ -81,8 +81,6 @@ class SetUpCache
 				$document = $documentProcessor->richText();
 				$document = $documentProcessor->images();
 
-				unset($document['uid']);
-
 				$path = './' . $CACHE_PATH['DOCUMENT_CACHE'] . '/';
 				$filename = (isset($document['uid']) ? $document['uid'] : $document['type'] . ' - ' . $document['id']) . $stringAppend . '.json';
 				if (!is_dir($path)) {
