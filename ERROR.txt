@@ -1,0 +1,8 @@
+To fix Api::get() error when there are scheduled releases:
+
+In /vendor/prismic/php-sdk/src/Ref.php
+On line 67 replace
+    ?int   $maybeScheduledAt = null
+with
+    ?float   $maybeScheduledAt = null
+

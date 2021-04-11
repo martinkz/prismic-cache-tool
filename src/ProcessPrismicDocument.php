@@ -15,7 +15,7 @@ class ProcessPrismicDocument
     private $domain = NULL;
     private $CACHE_PATH = NULL;
 
-    function __construct($document, $CACHE_PATH, $domain = NULL)
+    function __construct($document, $CACHE_PATH = NULL, $domain = NULL)
     {
         // Convert stdClass to Array
         $this->document = json_decode(json_encode($document), true);
@@ -70,7 +70,7 @@ class ProcessPrismicDocument
         foreach ($this->imageRefs as $i => $v) {
             $imageURL = $this->imageRefs[$i]['url'];
 
-            if ($cache) {
+            if ($cache && !is_null($this->CACHE_PATH)) {
                 $fileName = basename(parse_url($imageURL, PHP_URL_PATH));
                 $path = './' . $this->CACHE_PATH['IMAGE_CACHE'] . '/';
                 if (!is_dir($path)) {

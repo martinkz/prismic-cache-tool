@@ -24,7 +24,7 @@ class SetUpCache
 		}
 
 		$data = json_decode(file_get_contents('php://input'));
-		$data = json_decode(file_get_contents('webhook-data.json'));
+		// $data = json_decode(file_get_contents('webhook-data.json'));
 
 		if ($data) {
 			// If masterRef is set, this is a document publish (either regular publish or publish of a scheduled release), or archival of published document
