@@ -22,13 +22,12 @@ class PrismicPreview
         if (isset($_GET['token'])) {
 
             $hostname = parse_url($_GET['token'], PHP_URL_HOST);
-            // echo $hostname . "<br>";
 
             // Preview token
             // Hopefully the URL structure for the preview token won't change
-            // https://asdfgh.prismic.io/previews/X4rJpxAAACEA_4M1?websitePreviewId=X4mI6hAAACAA-exI
-            // https://asdfgh.prismic.io/previews/X4sAThAAAKsGAHVl~X4rJpxAAACEA_4M1?websitePreviewId=X4mI6hAAACAA-exI
-            // https://asdfgh.prismic.io/previews/X4rJpxAAACEA_4M1:X4sA3xAAACEAAHfo?websitePreviewId=X4mI6hAAACAA-exI
+            // https://asdfgh.prismic.io/previews/X4rJpxAAACEA_4M1?websitePreviewId=X4mI6hAAACAA-exI // Live page
+            // https://asdfgh.prismic.io/previews/X4sAThAAAKsGAHVl~X4rJpxAAACEA_4M1?websitePreviewId=X4mI6hAAACAA-exI // Scheduled release (~)
+            // https://asdfgh.prismic.io/previews/X4rJpxAAACEA_4M1:X4sA3xAAACEAAHfo?websitePreviewId=X4mI6hAAACAA-exI // Saved draft or modified document saved, but not yet published (:)
 
             $tokenPath = parse_url($_GET['token'], PHP_URL_PATH);
             $ref = substr(strrchr($tokenPath, "/"), 1);
@@ -57,17 +56,12 @@ class PrismicPreview
             $document = json_decode(json_encode($document), true);
 
             if ($PREVIEW_TYPE['draft_save']) {
-                // $newRef = str_replace(':', '^', $ref); // Replace the colon character, as it's not allowed in filenames on Windows
-                // $filename = $document['uid'] . '-' . $ref . '.json';
                 $documentProcessor = new ProcessPrismicDocument($document);
                 $document = $documentProcessor->richText();
                 $document = $documentProcessor->images(false);
                 session_start();
                 $_SESSION[$ref] = json_encode($document);
-                // file_put_contents($filename, json_encode($document));
             }
-
-            // print_r(json_encode($document));
 
             $urlAppend = $PREVIEW_TYPE['draft_save'] ? "?draft=" . $ref : ($PREVIEW_TYPE['scheduled_release'] ? "?release=" . $ref : "");
 
@@ -75,7 +69,6 @@ class PrismicPreview
 
             if ($url) {
                 $redirect_url = $url . $urlAppend;
-                // return $redirect_url;
                 header('Location: ' . $redirect_url);
             } else {
                 echo "Error. Couldn't resolve the page URL for this document.";
