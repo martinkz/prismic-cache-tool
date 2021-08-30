@@ -1,0 +1,8 @@
+To fix the Api::get() error when there are scheduled releases, due to a bug in the Prismic PHP SDK on Windows with 32-bit php integer size:
+
+In /vendor/prismic/php-sdk/src/Ref.php
+On line 67 replace
+    ?int   $maybeScheduledAt = null
+with
+    ?float   $maybeScheduledAt = null
+
