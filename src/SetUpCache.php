@@ -55,7 +55,7 @@ class SetUpCache
 
 			if (is_null($releaseRef) || is_null($documentIDs)) exit();
 
-			$api = Api::get($data->{"apiUrl"});
+			$api = Api::get($data->{"apiUrl"}.'/v2');
 			$response = $api->query(Predicates::in('document.id', $documentIDs), ['ref' => $releaseRef]);
 			$documents = $response->results;
 			$domain = $data->{"domain"};
